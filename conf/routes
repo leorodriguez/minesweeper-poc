@@ -1,0 +1,14 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET     /assets/*file               controllers.Assets.versioned(file)
+GET     /client/games/:id           controllers.GameController.game(id)
+
+#### API
+GET     /api/users/:id              api.controllers.UserController.getUser(id)
+POST    /api/users                  api.controllers.UserController.addUser
+GET     /api/games/:id              api.controllers.GameController.getGame(id)
+POST    /api/games                  api.controllers.GameController.addGame
+PUT     /api/games/:id/_reveal      api.controllers.GameController.revealCell(id)
+PUT     /api/games/:id/_mark        api.controllers.GameController.markCell(id)
