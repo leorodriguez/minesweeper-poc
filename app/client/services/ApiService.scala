@@ -7,16 +7,18 @@ import javax.inject.Inject
 import models.GameResponse.Formats._
 import models.UserResponse.Formats._
 import models.{GameResponse, GameResponseList, UserResponse}
+import play.api.Configuration
 import play.api.libs.json.{JsError, Json}
 import play.api.libs.ws._
 import play.api.mvc.{RequestHeader, Session}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository)(implicit ec: ExecutionContext) {
+class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository, config: Configuration)
+                          (implicit ec: ExecutionContext) {
 
   val sessionTokenKey = "sessionToken"
-  val endpoint = "minesweeper-leo.herokuapp.com"
+  val endpoint: String = config.get[String]("app.endpoint")
 
   def getUser(userName: String): Future[Option[UserResponse]] = {
     val response = ws.url(s"http://$endpoint/api/users/$userName").get().map { response =>

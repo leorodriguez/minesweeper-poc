@@ -2,7 +2,7 @@ package controllers
 
 import client.services.ApiService
 import javax.inject._
-import play.api.Logging
+import play.api.{Configuration, Logging}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, shortNumber}
 import play.api.mvc._
@@ -26,9 +26,12 @@ object GameForm {
 }
 
 @Singleton
-class GameController @Inject()(addToken: CSRFAddToken, checkToken: CSRFCheck, cc: ControllerComponents, api: ApiService)
+class GameController @Inject()(addToken: CSRFAddToken,
+                               cc: ControllerComponents, api: ApiService, config: Configuration)
                               (implicit ec: ExecutionContext, assetsFinder: AssetsFinder)
   extends AbstractController(cc) with play.api.i18n.I18nSupport with Logging with ControllerUtils {
+
+  val endpoint: String = config.get[String]("app.endpoint")
 
   def game(id: String): Action[AnyContent] = addToken(Action.async { implicit request =>
     withUser(api) { user =>
@@ -39,7 +42,7 @@ class GameController @Inject()(addToken: CSRFAddToken, checkToken: CSRFCheck, cc
         gameOpt match {
           case None => NotFound
           case Some(game) if game.owner != user.username => Forbidden(views.html.defaultpages.unauthorized())
-          case Some(game) => Ok(views.html.game(game, name, value))
+          case Some(game) => Ok(views.html.game(game, name, value, endpoint))
         }
       }
     }

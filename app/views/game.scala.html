@@ -1,11 +1,11 @@
-@(game: GameResponse, tokenName: String, tokenValue: String)(implicit assetsFinder: AssetsFinder)
+@(game: GameResponse, tokenName: String, tokenValue: String, endpoint: String)(implicit assetsFinder: AssetsFinder)
 @defining(0 until game.board.nRows) { rowsRange =>
 @defining(0 until game.board.nCols) { colsRange =>
 @defining(game.getElapsed()) { elapsed =>
 
 @main("Game")(Some(game.owner)) {
     <script>
-    let endpoint = 'http://minesweeper-leo.herokuapp.com/api/games/' + '@game.id';
+    let endpoint = 'http://@endpoint/api/games/' + '@game.id';
     var timer = undefined;
 
     function setTimer() {
