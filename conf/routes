@@ -2,13 +2,23 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+GET     /                           controllers.HomeController.index
 GET     /assets/*file               controllers.Assets.versioned(file)
 GET     /client/games/:id           controllers.GameController.game(id)
+GET     /client/games               controllers.GameController.userGames(username)
+GET     /client/play                controllers.GameController.newGame
+POST    /client/play                controllers.GameController.newGameForm
+GET     /client/index               controllers.HomeController.index
+GET     /client/login               controllers.LoginController.login
+POST    /client/login               controllers.LoginController.loginAttempt
+GET     /client/register            controllers.UserController.register
+POST    /client/register            controllers.UserController.registerForm
 
 #### API
 GET     /api/users/:id              api.controllers.UserController.getUser(id)
 POST    /api/users                  api.controllers.UserController.addUser
 GET     /api/games/:id              api.controllers.GameController.getGame(id)
-POST    /api/games                  api.controllers.GameController.addGame
 PUT     /api/games/:id/_reveal      api.controllers.GameController.revealCell(id)
 PUT     /api/games/:id/_mark        api.controllers.GameController.markCell(id)
+GET     /api/games                  api.controllers.GameController.getUserGames(username)
+POST    /api/games                  api.controllers.GameController.addGame

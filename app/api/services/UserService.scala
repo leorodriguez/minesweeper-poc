@@ -9,9 +9,9 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class UserService @Inject()(repo: UserRepository)(implicit ex: ExecutionContext) {
 
-  def getUser(userId: String): Future[Option[User]] = {
+  def getUser(userName: String): Future[Option[User]] = {
     for {
-      rep <- repo.getUser(userId)
+      rep <- repo.getUser(userName)
     } yield rep.map(toUser)
   }
 
@@ -20,11 +20,11 @@ class UserService @Inject()(repo: UserRepository)(implicit ex: ExecutionContext)
   }
 
   private def toUser(rep: UserRep): User = {
-    User(rep.id, rep.name, rep.password)
+    User(rep.username, rep.password)
   }
 
   private def toUserRep(user: User): UserRep = {
-    UserRep(user.id, user.name, user.password)
+    UserRep(user.username, user.password)
   }
 
 }

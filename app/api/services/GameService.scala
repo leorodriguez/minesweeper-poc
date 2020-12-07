@@ -16,7 +16,7 @@ class GameService @Inject()(repo: GameRepository, userService: UserService, boar
     for {
       gameOpt <- repo.getGame(id)
       boardOpt <- boardService.getBoard(id)
-      userOpt <- gameOpt.map(g => userService.getUser(g.userId)).getOrElse(Future.successful(None))
+      userOpt <- gameOpt.map(g => userService.getUser(g.username)).getOrElse(Future.successful(None))
     } yield {
       for {
         rep <- gameOpt
@@ -26,16 +26,23 @@ class GameService @Inject()(repo: GameRepository, userService: UserService, boar
     }
   }
 
+  def getUserGames(username: String): Future[Seq[Game]] = {
+    for {
+      reps <- repo.getUserGames(username)
+      games <- Future.traverse(reps)(rep => getGame(rep.gameId))
+    } yield games.flatten
+  }
+
   def upsertGame(game: Game): Future[Boolean] = {
     repo.upsertGame(toGameRep(game))
   }
 
   private def toGame(rep: GameRep, user: User, board: Board): Game = {
-    Game(rep.gameId, user, board)
+    Game(rep.gameId, user, board, rep.createdAt, rep.finishedAt)
   }
 
   private def toGameRep(game: Game): GameRep = {
-    GameRep(game.id, game.owner.id, Instant.now(), None)
+    GameRep(game.id, game.owner.username, game.createdAt, game.finishedAt)
   }
 
 }

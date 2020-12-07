@@ -1,0 +1,33 @@
+@(gameForm: Form[GameFormData])(username: String)(implicit assetsFinder: AssetsFinder, request: RequestHeader, messagesProvider: MessagesProvider)
+@import helper._
+
+@main("New")(Some(username)) {<i></i>} {
+    <div class="row">
+        <div class="col-*-2">
+            <p> Create a new game </p>
+        </div>
+        <div class="col-*-2">
+            @request.flash.data.map{ case (name, value) =>
+                <div>@name: @value</div>
+            }
+        </div>
+        <div class="col-*-4">
+            @helper.form(action = routes.GameController.newGameForm()) {
+                @CSRF.formField
+                @helper.inputText(gameForm("How many rows?"))
+                @helper.inputText(gameForm("How many columns?"))
+                @helper.inputText(gameForm("How many mines?"))
+            <button>Start</button>
+            }
+        </div>
+        <div class="col-*-4">
+            @if(gameForm.hasGlobalErrors) {
+                @gameForm.globalErrors.map { error: FormError =>
+                    <div>
+                        @error.key: @error.message
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}

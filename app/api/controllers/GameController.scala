@@ -1,9 +1,12 @@
 package api.controllers
 
+import java.time.Instant
+
 import api.services.{BoardService, GameService, UserService}
 import io.jvm.uuid.UUID
 import javax.inject._
-import models.{Board, Game, GameResponse, User}
+import models.{Board, Game, GameResponse, GameResponseList, User}
+import play.api.Logging
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText, number}
 import play.api.libs.json.Json
@@ -21,7 +24,7 @@ object GameForm {
       "colsNumber" -> number,
       "rowsNumber" -> number,
       "minesNumber" -> number,
-      "ownerId" -> nonEmptyText
+      "owner" -> nonEmptyText
     )(GameFormData.apply)(GameFormData.unapply)
   )
 }
@@ -39,7 +42,7 @@ object UpdateCellForm {
 class GameController @Inject()(cc: ControllerComponents, generator: Random, gameService: GameService,
                                userService: UserService, boardService: BoardService)
                               (implicit ex: ExecutionContext)
-  extends AbstractController(cc) {
+  extends AbstractController(cc) with Logging {
 
   import GameResponse.Formats._
 
@@ -59,12 +62,21 @@ class GameController @Inject()(cc: ControllerComponents, generator: Random, game
         for {
           userOpt <- userService.getUser(data.ownerId)
           _ <- boardService.addBoard(id, board)
-          gameOpt = userOpt.map(user => Game(id, user, board))
+          gameOpt = userOpt.map(user => Game(id, user, board, createdAt = java.time.Instant.now(), finishedAt = None))
           _ <- gameOpt.map(gameService.upsertGame).getOrElse(Future.successful(false))
           response <- getGameResponse(id)
         } yield response
       }
     )
+  }
+
+  def getUserGames(username: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
+    for {
+      games <- gameService.getUserGames(username)
+    } yield {
+      val reps = games.sortBy(_.createdAt)(Ordering[Instant].reverse) map (GameResponse.fromGame)
+      Ok(Json.toJson(GameResponseList(reps)))
+    }
   }
 
   def revealCell(gameId: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
@@ -78,6 +90,8 @@ class GameController @Inject()(cc: ControllerComponents, generator: Random, game
           gameOpt <- gameService.getGame(gameId)
           newBoardOpt = gameOpt.map(game => game.board.reveal(data.row, data.col))
           _ <- newBoardOpt.map(board => boardService.updateBoard(gameId, board)).getOrElse(Future.successful(false))
+          newGameOpt <- gameService.getGame(gameId)
+          _ <- newGameOpt.map(updateFinishTime).getOrElse(Future.successful(false))
           response <- getGameResponse(gameId)
         } yield response
       }
@@ -95,10 +109,21 @@ class GameController @Inject()(cc: ControllerComponents, generator: Random, game
           gameOpt <- gameService.getGame(gameId)
           newBoardOpt = gameOpt.map(game => game.board.mark(data.row, data.col))
           _ <- newBoardOpt.map(board => boardService.updateBoard(gameId, board)).getOrElse(Future.successful(false))
+          newGameOpt <- gameService.getGame(gameId)
+          _ <- newGameOpt.map(gameService.upsertGame).getOrElse(Future.successful(false))
           response <- getGameResponse(gameId)
         } yield response
       }
     )
+  }
+
+  private def updateFinishTime(game: Game): Future[Boolean] = {
+    val finished = game.board.lost() || game.board.won()
+    lazy val newGame = game.copy(finishedAt = Some(Instant.now()))
+    if (finished) logger.warn(s"Game ${game.id} is finished")
+    for {
+      ok <- if (finished) gameService.upsertGame(newGame) else Future.successful(false)
+    } yield ok
   }
 
   private def getGameResponse(id: String): Future[Result] = {

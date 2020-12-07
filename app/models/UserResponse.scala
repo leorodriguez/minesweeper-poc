@@ -2,7 +2,7 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class UserResponse(id: String, name: String)
+case class UserResponse(username: String, password: String)
 
 object UserResponse {
 
@@ -11,6 +11,6 @@ object UserResponse {
   }
 
   def fromUser(user: User): UserResponse = {
-    UserResponse(user.id, user.name)
+    UserResponse(user.username, user.password)
   }
 }

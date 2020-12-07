@@ -1,0 +1,32 @@
+@(loginForm: Form[LoginFormData])(username: Option[String])(implicit assetsFinder: AssetsFinder, request: RequestHeader, messagesProvider: MessagesProvider)
+@import helper._
+
+@main("Login")(username) {<i></i>} {
+    <div class="row">
+        <div class="col-*-2">
+            <p> Login </p>
+        </div>
+        <div class="col-*-2">
+            @request.flash.data.map{ case (name, value) =>
+                <div>@name: @value</div>
+            }
+        </div>
+        <div class="col-*-4">
+            @helper.form(action = routes.LoginController.loginAttempt()) {
+                @CSRF.formField
+                @helper.inputText(loginForm("username"))
+                @helper.inputText(loginForm("password"))
+            <button>Login</button>
+            }
+        </div>
+        <div class="col-*-4">
+            @if(loginForm.hasGlobalErrors) {
+                @loginForm.globalErrors.map { error: FormError =>
+                    <div>
+                        @error.key: @error.message
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}

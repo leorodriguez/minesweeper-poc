@@ -2,11 +2,7 @@
 @defining(0 until game.board.nRows) { rowsRange =>
 @defining(0 until game.board.nCols) { colsRange =>
 
-
-<html>
-<head>
-    <script src="@assetsFinder.path("javascripts/jquery-3.5.1.js")" type="text/javascript"></script>
-    <script src="@assetsFinder.path("javascripts/image-scale.js")" type="text/javascript"></script>
+@main("Game")(Some(game.owner)) {
     <script>
     let endpoint = 'http://localhost:9000/api/games/' + '@game.id';
 
@@ -68,10 +64,11 @@
         if (result.board.hasWinner) {
             $('#msg').html("<strong>You WON</strong");
             unbindCells();
+            $('#status').attr("src", src='@assetsFinder.path("images/happy.svg")');
         } else if (result.board.hasLoser) {
             $('#msg').html("<strong>Game Over</strong");
             unbindCells();
-            return;
+            $('#status').attr("src", src='@assetsFinder.path("images/dead.svg")');
         }
     }
 
@@ -135,25 +132,37 @@
   font-size: 30px;
 }
 </style>
+} {
 
-
-
-</head>
-<body>
-
-<p id="msg">Clear the land and flag all the mines!</p>
-
-<div class="grid-container">
-    @for(i <- rowsRange) {
-        @for(j <- colsRange) {
-            <div class="item1" id="item-@i-@j">@i, @j</div>
-        }
-    }
+<div class="row row-m-t ">
+    <div class="col-*-6">
+        <h3 id="msg">Clear the land and flag all the mines!</h3>
+    </div>
+    <div class="col-*-6">
+            <img id="status" width="10%" height="10%" src='@assetsFinder.path("images/flag.svg")'>
+    </div>
 </div>
 
+<div class="row row-m-t">
+    <div class="col-*-12">
+    <div class="grid-container">
+        @for(i <- rowsRange) {
+            @for(j <- colsRange) {
+                <div class="item1" id="item-@i-@j">@i, @j</div>
+            }
+        }
+    </div>
+    </div>
+</div>
 
-</body>
-</html>
+<!--<div class="row row-m-t">-->
+<!--    <div class="col-*-3  col-md-offset-9">-->
+<!--        <button type="button" class="btn btn-info btn-lg">New</button>-->
+<!--    </div>-->
+<!--</div>-->
+
+
+}
 
 
 }}

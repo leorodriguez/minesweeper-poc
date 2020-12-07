@@ -1,0 +1,32 @@
+@(regForm: Form[RegisterFormData])(username: Option[String])(implicit assetsFinder: AssetsFinder, request: RequestHeader, messagesProvider: MessagesProvider)
+@import helper._
+
+@main("Register")(username) {<i></i>} {
+    <div class="row">
+        <div class="col-*-2">
+            <p> Register a new user </p>
+        </div>
+        <div class="col-*-2">
+            @request.flash.data.map{ case (name, value) =>
+                <div>@name: @value</div>
+            }
+        </div>
+        <div class="col-*-4">
+            @helper.form(action = routes.UserController.registerForm()) {
+                @CSRF.formField
+                @helper.inputText(regForm("username"))
+                @helper.inputText(regForm("password"))
+            <button>Login</button>
+            }
+        </div>
+        <div class="col-*-4">
+            @if(regForm.hasGlobalErrors) {
+                @regForm.globalErrors.map { error: FormError =>
+                    <div>
+                        @error.key: @error.message
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}

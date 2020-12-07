@@ -1,0 +1,43 @@
+i {
+    visibility: hidden;
+}
+
+
+.navbar-default {
+    background-color: #2196F3;
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+.navbar-default .navbar-brand {
+    color: white;
+    font-weight: bold;
+}
+
+.navbar-default .navbar-nav > li > a {
+    color: white;
+    font-weight: bold;
+}
+
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+    color: white;
+    font-weight: bold;
+    background-color: #00BFFF;
+}
+
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+    color: white;
+}
+
+body {
+    background-color: #E0FFFF;
+}
+
+.row-m-t{
+  margin-top : 50px
+}
+.btn-info {
+   background-color: #2196F3;
+}

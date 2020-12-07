@@ -1,0 +1,27 @@
+@(games: Seq[GameResponse])(username: String)(implicit assetsFinder: AssetsFinder)
+@defining(Some(username)) { userInfo =>
+
+@main("Games")(userInfo) {<i></i>} {
+    <div class="row">
+        <div class="col-*-3">
+            @if(games.isEmpty) {
+                <p>You don't have previous games. Create a new one!</p>
+            } else {
+                <p> Your games: </p>
+            }
+        </div>
+        <div class="col-*-12">
+            <ul class="list-group">
+            @for(g <- games) {
+                @if(g.finished.isDefined) {
+                <li class=list-group-item"><a href="/client/games/@g.id">Created: @g.createdAt - <b>Finished</b></a></li>
+                } else {
+                <li class=list-group-item"><a href="/client/games/@g.id">Created: @g.createdAt - <b>In progress</b></a></li>
+                }
+            }
+            </ul>
+        </div>
+    </div>
+}
+
+}

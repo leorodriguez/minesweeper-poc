@@ -1,0 +1,26 @@
+@(caller: String)(username: Option[String])
+
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/client/index">MineSweeper</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li id="New"><a href="/client/play">New</a></li>
+            @if(username.isDefined) {
+                <li id="Games"><a href="/client/games?username=@username.get">Games</a></li>
+            } else {
+                <li id="Games"><a href="/client/login">Games</a></li>
+            }
+        </ul>
+        <div class="pull-right">
+                <ul class="nav navbar-nav">
+                    @if(username.isDefined) {
+                        <li><a href="#">You are logged as <b>@username.get</b></a></li>
+                    }
+                    <li id="Login"><a href="/client/login">Login</a></li>
+                    <li id="Register"><a href="/client/register">Register</a></li>
+                </ul>
+        </div>
+    </div>
+</nav>

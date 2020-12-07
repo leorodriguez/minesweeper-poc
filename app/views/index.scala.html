@@ -1,0 +1,10 @@
+@(message: String)(username: Option[String])(implicit assetsFinder: AssetsFinder)
+
+@main("Index")(username) {<i></i>} {
+    <div class="row">
+        <div class="col-*-12">
+            <h1> Welcome to MineSweeper! </h1>
+            <img id="status" width="10%" height="10%" src='@assetsFinder.path("images/happy.svg")'>
+        </div>
+    </div>
+}

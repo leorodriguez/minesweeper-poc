@@ -10,19 +10,19 @@ import slick.lifted.Tag
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class GameRep(gameId: String, userId: String, createdAt: Instant, finishedAt: Option[Instant])
+case class GameRep(gameId: String, username: String, createdAt: Instant, finishedAt: Option[Instant])
 
 class GameTableDef(tag: Tag) extends Table[GameRep](tag, "ms_games") {
 
   def gameId = column[String]("game_id", O.Length(128), O.PrimaryKey)
 
-  def userId = column[String]("user_id")
+  def username = column[String]("username")
 
   def createdAt = column[Instant]("created_at")
 
   def finishedAt = column[Option[Instant]]("finished_at")
 
-  override def * = (gameId, userId, createdAt, finishedAt) <> (GameRep.tupled, GameRep.unapply)
+  override def * = (gameId, username, createdAt, finishedAt) <> (GameRep.tupled, GameRep.unapply)
 }
 
 @Singleton
@@ -39,6 +39,10 @@ class GameRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPro
 
   def getGame(gameId: String): Future[Option[GameRep]] = {
     db.run(game.filter(_.gameId === gameId).result.headOption)
+  }
+
+  def getUserGames(username: String): Future[Seq[GameRep]] = {
+    db.run(game.filter(_.username === username).result)
   }
 
   def upsertGame(gameRep: GameRep): Future[Boolean] = {

@@ -16,7 +16,7 @@ case class UserFormData(name: String, password: String)
 object UserForm {
   val form: Form[UserFormData] = Form(
     mapping(
-      "name" -> nonEmptyText,
+      "username" -> nonEmptyText,
       "password" -> nonEmptyText
     )(UserFormData.apply)(UserFormData.unapply)
   )
@@ -29,8 +29,8 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
 
   import UserResponse.Formats._
 
-  def getUser(id: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
-    getUserResponse(id)
+  def getUser(username: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
+    getUserResponse(username)
   }
 
   def addUser(): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
@@ -40,15 +40,14 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
         Future.successful(BadRequest("invalid input"))
       },
       data => {
-        val id = UUID.randomString
-        val user = User(id, data.name, data.password)
-        userService.upsertUser(user) flatMap (_ => getUserResponse(id))
+        val user = User(data.name, data.password)
+        userService.upsertUser(user) flatMap (_ => getUserResponse(data.name))
       }
     )
   }
 
-  private def getUserResponse(id: String): Future[Result] = {
-    userService.getUser(id) map { userOpt =>
+  private def getUserResponse(username: String): Future[Result] = {
+    userService.getUser(username) map { userOpt =>
       userOpt.map(user => Ok(Json.toJson(UserResponse.fromUser(user)))).getOrElse(NotFound)
     }
   }
