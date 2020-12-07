@@ -110,7 +110,7 @@ class GameController @Inject()(cc: ControllerComponents, generator: Random, game
           newBoardOpt = gameOpt.map(game => game.board.mark(data.row, data.col))
           _ <- newBoardOpt.map(board => boardService.updateBoard(gameId, board)).getOrElse(Future.successful(false))
           newGameOpt <- gameService.getGame(gameId)
-          _ <- newGameOpt.map(gameService.upsertGame).getOrElse(Future.successful(false))
+          _ <- newGameOpt.map(updateFinishTime).getOrElse(Future.successful(false))
           response <- getGameResponse(gameId)
         } yield response
       }

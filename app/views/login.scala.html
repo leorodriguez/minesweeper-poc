@@ -2,9 +2,9 @@
 @import helper._
 
 @main("Login")(username) {<i></i>} {
-    <div class="row">
+    <div class="row row-m-l">
         <div class="col-*-2">
-            <p> Login </p>
+            <h2> Login </h2>
         </div>
         <div class="col-*-2">
             @request.flash.data.map{ case (name, value) =>
@@ -29,4 +29,4 @@
             }
         </div>
     </div>
-}
+}{<i></i>}

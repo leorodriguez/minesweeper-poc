@@ -1,10 +1,44 @@
 @(game: GameResponse, tokenName: String, tokenValue: String)(implicit assetsFinder: AssetsFinder)
 @defining(0 until game.board.nRows) { rowsRange =>
 @defining(0 until game.board.nCols) { colsRange =>
+@defining(game.getElapsed()) { elapsed =>
 
 @main("Game")(Some(game.owner)) {
     <script>
     let endpoint = 'http://localhost:9000/api/games/' + '@game.id';
+    var timer = undefined;
+
+    function setTimer() {
+        var config = {
+            'startValues': {
+                'hours': @elapsed.hours,
+                'minutes': @elapsed.minutes,
+                'seconds': @elapsed.seconds
+            }
+        };
+        @if(game.finished.isDefined) {
+            @defining(game.totalTime) { total =>
+                config = {
+                    'startValues': {
+                        'hours': @total.hours,
+                        'minutes': @total.minutes,
+                        'seconds': @total.seconds
+                    }
+                }
+            }
+        }
+        timer = new easytimer.Timer(config);
+        timer.addEventListener('secondsUpdated', function (e) {
+            $('#timer').html(timer.getTimeValues().toString());
+        });
+        @if(game.finished.isEmpty) {
+            timer.start();
+        } else {
+            console.log(timer.getTimeValues().toString());
+            $('#timer').html(timer.getTimeValues().toString());
+        }
+        console.log(config);
+    }
 
     function revealNewBoard(i, j) {
         let data = {"row": i, "col": j};
@@ -62,13 +96,15 @@
         }
         $("img.scale").imageScale();
         if (result.board.hasWinner) {
-            $('#msg').html("<strong>You WON</strong");
+            $('#msg').html("<strong>You WIN</strong");
             unbindCells();
             $('#status').attr("src", src='@assetsFinder.path("images/happy.svg")');
+            timer.stop();
         } else if (result.board.hasLoser) {
             $('#msg').html("<strong>Game Over</strong");
             unbindCells();
             $('#status').attr("src", src='@assetsFinder.path("images/dead.svg")');
+            timer.stop();
         }
     }
 
@@ -113,6 +149,7 @@
             }
         }
         initBoard();
+        setTimer();
     });
     </script>
 <style>
@@ -134,12 +171,16 @@
 </style>
 } {
 
-<div class="row row-m-t ">
-    <div class="col-*-6">
-        <h3 id="msg">Clear the land and flag all the mines!</h3>
+<div class="row row-m-t">
+    <div class="col-md-3 col-md-offset-1">
+        <h1 id="msg">Clear the land and flag all the mines!</h1>
+        <p> Use right click to put a flag.</p>
     </div>
-    <div class="col-*-6">
-            <img id="status" width="10%" height="10%" src='@assetsFinder.path("images/flag.svg")'>
+    <div class="col-md-4">
+        <img id="status"     width="20%" height="20%" src='@assetsFinder.path("images/flag.svg")'>
+    </div>
+    <div class="col-md-4 col-timer">
+        <h1><div id="timer">00:00:00</div></h1>
     </div>
 </div>
 
@@ -155,14 +196,8 @@
     </div>
 </div>
 
-<!--<div class="row row-m-t">-->
-<!--    <div class="col-*-3  col-md-offset-9">-->
-<!--        <button type="button" class="btn btn-info btn-lg">New</button>-->
-<!--    </div>-->
-<!--</div>-->
+
+}{<i></i>}
 
 
-}
-
-
-}}
+}}}

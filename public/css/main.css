@@ -38,6 +38,17 @@ body {
 .row-m-t{
   margin-top : 50px
 }
+.row-m-l {
+  margin-left : 10px
+}
+
+
 .btn-info {
    background-color: #2196F3;
+}
+
+.col-timer {
+    background-color: #2196F3;
+    color: white;
+    font-weight: bold;
 }

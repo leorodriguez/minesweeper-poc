@@ -2,12 +2,12 @@
 @defining(Some(username)) { userInfo =>
 
 @main("Games")(userInfo) {<i></i>} {
-    <div class="row">
+    <div class="row row-m-l">
         <div class="col-*-3">
             @if(games.isEmpty) {
-                <p>You don't have previous games. Create a new one!</p>
+                <h3>You don't have previous games. Create a new one!</h3>
             } else {
-                <p> Your games: </p>
+                <h2> Your games: </h2>
             }
         </div>
         <div class="col-*-12">
@@ -22,6 +22,6 @@
             </ul>
         </div>
     </div>
-}
+}{<i></i>}
 
 }
