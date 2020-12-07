@@ -5,7 +5,7 @@
 
 @main("Game")(Some(game.owner)) {
     <script>
-    let endpoint = 'http://localhost:9000/api/games/' + '@game.id';
+    let endpoint = 'http://minesweeper-leo.herokuapp.com/api/games/' + '@game.id';
     var timer = undefined;
 
     function setTimer() {

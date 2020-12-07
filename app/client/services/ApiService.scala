@@ -16,9 +16,10 @@ import scala.concurrent.{ExecutionContext, Future}
 class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository)(implicit ec: ExecutionContext) {
 
   val sessionTokenKey = "sessionToken"
+  val endpoint = "minesweeper-leo.herokuapp.com"
 
   def getUser(userName: String): Future[Option[UserResponse]] = {
-    val response = ws.url(s"http://localhost:9000/api/users/$userName").get().map { response =>
+    val response = ws.url(s"http://$endpoint/api/users/$userName").get().map { response =>
       response.status match {
         case 200 => response.json.validateOpt[UserResponse]
         case code => JsError(s"unexpected status code $code")
@@ -32,7 +33,7 @@ class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository)(implici
       "username" -> userName,
       "password" -> password
     )
-    val response = ws.url(s"http://localhost:9000/api/users").post(data).map { response =>
+    val response = ws.url(s"http://$endpoint/api/users").post(data).map { response =>
       response.status match {
         case 200 => response.json.validateOpt[UserResponse]
         case code => JsError(s"unexpected status code $code")
@@ -59,7 +60,7 @@ class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository)(implici
   }
 
   def getGame(gameId: String): Future[Option[GameResponse]] = {
-    val response = ws.url(s"http://localhost:9000/api/games/$gameId").get().map { response =>
+    val response = ws.url(s"http://$endpoint/api/games/$gameId").get().map { response =>
       response.status match {
         case 200 => response.json.validateOpt[GameResponse]
         case code => JsError(s"unexpected status code $code")
@@ -69,7 +70,7 @@ class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository)(implici
   }
 
   def getUserGames(username: String): Future[Option[GameResponseList]] = {
-    val response = ws.url(s"http://localhost:9000/api/games?username=$username").get().map { response =>
+    val response = ws.url(s"http://$endpoint/api/games?username=$username").get().map { response =>
       (response.json).validate[GameResponseList]
     }
     response.map(_.asOpt)
@@ -82,7 +83,7 @@ class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository)(implici
       "minesNumber" -> nMines,
       "owner" -> username
     )
-    val response = ws.url(s"http://localhost:9000/api/games").post(data).map { response =>
+    val response = ws.url(s"http://$endpoint/api/games").post(data).map { response =>
       response.status match {
         case 200 => response.json.validateOpt[GameResponse]
         case code => JsError(s"unexpected status code $code")
