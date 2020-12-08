@@ -91,10 +91,8 @@
         let cells = result.board.cells;
         var i = 0;
         for (i = 0; i < cells.length; i++) {
-            let cell_id = "item-" + cells[i].row + "-" + cells[i].col;
-            $('#' + cell_id).html(imageTag(cells[i]));
+            updateIfNeeded(cells[i]);
         }
-        $("img.scale").imageScale();
         if (result.board.hasWinner) {
             $('#msg').html("<strong>You WIN</strong");
             unbindCells();
@@ -108,9 +106,29 @@
         }
     }
 
-    function imageTag(cell) {
-        let name = imageName(cell);
-        return `<img class="scale" data-scale="best-fit-down" data-align="center" src='@assetsFinder.path("images/${name}")'>`;
+    function updateIfNeeded(cell) {
+            let cell_id = "item-" + cell.row + "-" + cell.col;
+            let elem_id = '#' + cell_id;
+            let newSrc = imageName(cell);
+            var change = false;
+            if ($(elem_id).children('img').length == 0) {
+                // console.log("first update for " + cell_id);
+                change = true;
+            } else {
+                change = !$(elem_id).find("img:first").attr('src').endsWith(newSrc);
+            }
+            if (change) {
+                // console.log(cell_id + " updated.");
+                $(elem_id).html(imageTag(cell_id, newSrc));
+                $(elem_id).find("img:first").imageScale();
+            } else {
+                console.log(cell_id + " omitted.");
+            }
+    }
+
+    function imageTag(cell_id, newSrc) {
+        let name = newSrc;
+        return `<img class="scale" width="1%" height="1%" data-scale="best-fit-down" data-align="center" src='@assetsFinder.path("images/${name}")'>`;
     }
 
     function imageName(cell) {
@@ -189,7 +207,7 @@
     <div class="grid-container">
         @for(i <- rowsRange) {
             @for(j <- colsRange) {
-                <div class="item1" id="item-@i-@j">@i, @j</div>
+                <div class="item1" id="item-@i-@j"></div>
             }
         }
     </div>
