@@ -1,8 +1,6 @@
 package api.services
 
-import java.time.Instant
-
-import api.repositories.{BoardRepository, GameRep, GameRepository, UserRepository}
+import api.repositories.{GameRep, GameRepository}
 import javax.inject.{Inject, Singleton}
 import models.{Board, Game, User}
 
@@ -12,6 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class GameService @Inject()(repo: GameRepository, userService: UserService, boardService: BoardService)
                            (implicit ex: ExecutionContext) {
 
+  /** Gets the game of the given id if it exists */
   def getGame(id: String): Future[Option[Game]] = {
     for {
       gameOpt <- repo.getGame(id)
@@ -26,6 +25,7 @@ class GameService @Inject()(repo: GameRepository, userService: UserService, boar
     }
   }
 
+  /** Gets a sequence of games that belongs to the given user */
   def getUserGames(username: String): Future[Seq[Game]] = {
     for {
       reps <- repo.getUserGames(username)
@@ -33,6 +33,7 @@ class GameService @Inject()(repo: GameRepository, userService: UserService, boar
     } yield games.flatten
   }
 
+  /** Inserts or updates a game */
   def upsertGame(game: Game): Future[Boolean] = {
     repo.upsertGame(toGameRep(game))
   }

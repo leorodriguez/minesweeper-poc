@@ -14,6 +14,7 @@ import scala.util.control.NonFatal
 
 case class UserFormData(name: String, password: String)
 
+/** A form to create a new user */
 object UserForm {
   val form: Form[UserFormData] = Form(
     mapping(
@@ -23,6 +24,9 @@ object UserForm {
   )
 }
 
+/**
+    Handles creation and retrieval of users.
+ */
 @Singleton
 class UserController @Inject()(cc: ControllerComponents, userService: UserService)
                               (implicit ex: ExecutionContext)
@@ -30,10 +34,19 @@ class UserController @Inject()(cc: ControllerComponents, userService: UserServic
 
   import UserResponse.Formats._
 
+  /**
+   * Gets a user with the given username
+   * @param username
+   * @return NotFound if the user does not exist, OK if it does exist.
+   */
   def getUser(username: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     getUserResponse(username)
   }
 
+  /**
+   * POST a new user
+   * @return BadRequest if the form has errors, OK otherwise.
+   */
   def addUser(): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     UserForm.form.bindFromRequest.fold(
       errorForm => {

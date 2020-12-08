@@ -19,6 +19,7 @@ import scala.util.control.NonFatal
 case class GameFormData(colsNumber: Int, rowsNumber: Int, minesNumber: Int, ownerId: String)
 case class CellFormData(row: Int, col: Int)
 
+/** Form to create a new game */
 object GameForm {
   val form: Form[GameFormData] = Form(
     mapping(
@@ -30,6 +31,7 @@ object GameForm {
   )
 }
 
+/** From to reveal or mark a cell in the board */
 object UpdateCellForm {
   val form: Form[CellFormData] = Form(
     mapping(
@@ -39,6 +41,9 @@ object UpdateCellForm {
   )
 }
 
+/**
+ *  Handles games GET and POST requests.
+ */
 @Singleton
 class GameController @Inject()(cc: ControllerComponents, generator: Random, gameService: GameService,
                                userService: UserService, boardService: BoardService)
@@ -47,10 +52,19 @@ class GameController @Inject()(cc: ControllerComponents, generator: Random, game
 
   import GameResponse.Formats._
 
+  /**
+   *  Retrieves a game response given the id.
+   * @param id The id of the game to retrieve
+   * @return Ok if the game exists, NotFound if it does not exist.
+   */
   def getGame(id: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     getGameResponse(id)
   }
 
+  /**
+   * Processes a POST request to create a new game.
+   * @return BadRequest if the form has errors, OK if the game was crated successfully
+   */
   def addGame(): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     GameForm.form.bindFromRequest.fold(
       errorForm => {
@@ -75,6 +89,11 @@ class GameController @Inject()(cc: ControllerComponents, generator: Random, game
     )
   }
 
+  /**
+   *  Processes a GET request to obtain the list of games that belong to the given user
+   * @param username The user to obtain the games
+   * @return A list of games sorted by creation time
+   */
   def getUserGames(username: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     (for {
       games <- gameService.getUserGames(username)
@@ -88,6 +107,11 @@ class GameController @Inject()(cc: ControllerComponents, generator: Random, game
     }
   }
 
+  /**
+   *  Processes a POST request to revel the content of a cell in the game's board
+   * @param gameId The id of the game to be updated
+   * @return BadRequest if the form has errors, OK if it the cell was updated accordingly
+   */
   def revealCell(gameId: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     UpdateCellForm.form.bindFromRequest.fold(
       errorForm => {
@@ -111,6 +135,11 @@ class GameController @Inject()(cc: ControllerComponents, generator: Random, game
     )
   }
 
+  /**
+   * Processes a POST request to mark a cell of the given game's board
+   * @param gameId The id of the game to be updated
+   * @return BadRequest if the from has errors, OK otherwise
+   */
   def markCell(gameId: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     UpdateCellForm.form.bindFromRequest.fold(
       errorForm => {

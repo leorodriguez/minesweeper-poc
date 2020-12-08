@@ -9,12 +9,14 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class UserService @Inject()(repo: UserRepository)(implicit ex: ExecutionContext) {
 
+  /** Gets the user of the given username if it exists */
   def getUser(userName: String): Future[Option[User]] = {
     for {
       rep <- repo.getUser(userName)
     } yield rep.map(toUser)
   }
 
+  /** Inserts or updates the given user */
   def upsertUser(user: User): Future[Boolean]  = {
     repo.upsertUser(toUserRep(user))
   }

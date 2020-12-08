@@ -10,12 +10,14 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class BoardService @Inject()(repo: BoardRepository)(implicit ex: ExecutionContext) {
 
+  /** Get the board with the given id */
   def getBoard(gameId: String): Future[Option[Board]] = {
     for {
       reps <- repo.getBoard(gameId)
     } yield toBoard(reps)
   }
 
+  /** Add a board to given game */
   def addBoard(gameId: String, board: Board): Future[Boolean] = {
     val reps = toReps(gameId, board)
     for {
@@ -23,6 +25,7 @@ class BoardService @Inject()(repo: BoardRepository)(implicit ex: ExecutionContex
     } yield results.contains(true)
   }
 
+  /** Update the board of the given game */
   def updateBoard(gameId: String, board: Board): Future[Boolean] = {
     val reps = toReps(gameId, board)
     for {

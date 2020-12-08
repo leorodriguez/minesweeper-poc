@@ -15,6 +15,9 @@ import scala.util.control.NonFatal
 
 case class BoardRep(gameId: String, row: Int, col: Int, hidden: Boolean, value: CellValue, mark: Option[CellMark])
 
+/**
+ * Table to store a BOARD. It contains the content of each cell in the board.
+ */
 class BoardTableDef(tag: Tag) extends Table[BoardRep](tag, "ms_boards") {
   import BoardTableDef._
 
@@ -30,6 +33,9 @@ class BoardTableDef(tag: Tag) extends Table[BoardRep](tag, "ms_boards") {
   = (gameId, row, col, hidden, value, mark) <> (BoardRep.tupled, BoardRep.unapply)
 }
 
+/**
+ *  Contains a mapping of model types to actual SQL column types
+ */
 object BoardTableDef {
   implicit val cellValueColumnType: BaseColumnType[CellValue] = MappedColumnType.base[CellValue, String](
     {
@@ -54,6 +60,9 @@ object BoardTableDef {
   )
 }
 
+/**
+ * Handles access to stored Board information.
+ */
 @Singleton
 class BoardRepository @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
                                (implicit ex: ExecutionContext)
@@ -64,6 +73,9 @@ class BoardRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPr
   import BoardTableDef._
   import dbConfig.profile.api._
 
+  /**
+   * Create a schema for boards.
+   */
   def init(): Future[Unit] = {
     db.run(board.schema.createIfNotExists) recoverWith {
       case NonFatal(ex) =>
@@ -72,6 +84,9 @@ class BoardRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPr
     }
   }
 
+  /**
+   * Gets a board with the given Id.
+   */
   def getBoard(gameId: String): Future[Seq[BoardRep]] = {
     db.run(board.filter(_.gameId === gameId).result) recoverWith {
       case NonFatal(ex) =>
@@ -80,6 +95,11 @@ class BoardRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPr
     }
   }
 
+  /**
+   * Inserts a new board if it does not already exists. Does nothing otherwise.
+   * @param boardRep The cell to be inserted
+   * @return true if the board was stored, false otherwise.
+   */
   def insertBoard(boardRep: BoardRep): Future[Boolean] = {
     db.run((board += boardRep).asTry).map(_.isSuccess) recoverWith {
       case NonFatal(ex) =>
@@ -88,6 +108,11 @@ class BoardRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPr
     }
   }
 
+  /**
+   * Updates the content of a cell in a board
+   * @param boardRep The cell to be updated
+   * @return true if the cell was updated, false otherwise.
+   */
   def updateBoard(boardRep: BoardRep): Future[Boolean] = {
     db.run(board
       .filter(_.gameId === boardRep.gameId)

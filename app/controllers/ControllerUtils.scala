@@ -8,8 +8,10 @@ import play.api.mvc.{AnyContent, Request, Result}
 
 import scala.concurrent.{ExecutionContext, Future}
 
+/** Helpers to handle user's session */
 trait ControllerUtils { this: Logging =>
 
+  /** Retrieves the current session user and applies the given block, or redirects to login route if no user is logged in */
   def withUser[T](api: ApiService)(block: UserResponse => Future[Result])(
     implicit request: Request[AnyContent], ex: ExecutionContext): Future[Result] = {
     for {
@@ -21,6 +23,7 @@ trait ControllerUtils { this: Logging =>
     }
   }
 
+  /** Retrieves the current session user (if it of exists) and applies the block */
   def withOptUser[T](api: ApiService)(block: Option[UserResponse] => Future[Result])(
     implicit request: Request[AnyContent], ex: ExecutionContext): Future[Result] = {
     for {

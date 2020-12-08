@@ -18,12 +18,14 @@ class ApplicationStart @Inject() (lifecycle: ApplicationLifecycle,
 
   val logger: Logger = Logger("modules.ApplicationStart")
 
+  // Wait for creation of schema at the start of the app.
   Await.result(userRepo.init(), Duration.Inf)
   Await.result(gameRepo.init(), Duration.Inf)
   Await.result(boardRepo.init(), Duration.Inf)
   Await.result(sessionRepo.init(), Duration.Inf)
 
   lifecycle.addStopHook { () =>
+    logger.warn("App was stopped")
     Future.successful(())
   }
 }

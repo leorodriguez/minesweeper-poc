@@ -12,6 +12,10 @@ import scala.util.control.NonFatal
 
 case class UserRep(username: String, password: String)
 
+/**
+ * A table to store users.
+ * TODO: Avoid plain-text password storage
+ */
 class UserTableDef(tag: Tag) extends Table[UserRep](tag, "ms_users") {
 
   def username = column[String]("username", O.PrimaryKey, O.Length(64))
@@ -20,6 +24,7 @@ class UserTableDef(tag: Tag) extends Table[UserRep](tag, "ms_users") {
   override def * = (username, password) <> (UserRep.tupled, UserRep.unapply)
 }
 
+/** Handles access to users stored information */
 @Singleton
 class UserRepository @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
                               (implicit ex: ExecutionContext)
@@ -29,6 +34,7 @@ class UserRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPro
 
   import dbConfig.profile.api._
 
+  /** Creates users schema */
   def init(): Future[Unit] = {
     db.run(users.schema.createIfNotExists) recoverWith {
       case NonFatal(ex) =>
@@ -37,6 +43,7 @@ class UserRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPro
     }
   }
 
+  /** Retrieves a user with the given username */
   def getUser(username: String): Future[Option[UserRep]] = {
     db.run(users.filter(_.username === username).result.headOption) recoverWith {
       case NonFatal(ex) =>
@@ -45,6 +52,7 @@ class UserRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPro
     }
   }
 
+  /** Inserts or update a user */
   def upsertUser(userRep: UserRep): Future[Boolean] = {
     db.run(users.insertOrUpdate(userRep)).map(_ > 0) recoverWith {
       case NonFatal(ex) =>

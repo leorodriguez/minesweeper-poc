@@ -16,6 +16,7 @@ import scala.util.control.NonFatal
 
 case class UserSession(token: String, username: String, expiration: Instant)
 
+/** A table to store users session's token */
 class SessionTableDef(tag: Tag) extends Table[UserSession](tag, "ms_session") {
 
   def token = column[String]("token", O.PrimaryKey, O.Length(128))
@@ -33,6 +34,7 @@ class SessionRepository @Inject()(protected val dbConfigProvider: DatabaseConfig
 
   import dbConfig.profile.api._
 
+  /** Creates sessions schema */
   def init(): Future[Unit] = {
     db.run(sessions.schema.createIfNotExists) recoverWith {
       case NonFatal(ex) =>
@@ -41,6 +43,7 @@ class SessionRepository @Inject()(protected val dbConfigProvider: DatabaseConfig
     }
   }
 
+  /** Gets the session with the given token if it exists */
   def getSession(token: String): Future[Option[UserSession]] = {
     db.run(sessions.filter(_.token === token).result.headOption) recoverWith {
       case NonFatal(ex) =>
@@ -49,6 +52,7 @@ class SessionRepository @Inject()(protected val dbConfigProvider: DatabaseConfig
     }
   }
 
+  /** Adds a new session for the given username */
   def addSession(username: String): Future[String] = {
     val token = s"$username-token-${UUID.randomString}"
     // TODO make expiration time configurable

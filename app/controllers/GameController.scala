@@ -15,6 +15,7 @@ import scala.util.control.NonFatal
 
 case class GameFormData(nRows: Int, nCols: Int, nMines: Int)
 
+/** A form to create a new game */
 object GameForm {
   val form: Form[GameFormData] = Form(
     mapping(
@@ -26,6 +27,7 @@ object GameForm {
   )
 }
 
+/** Handles CLIENT game requests */
 @Singleton
 class GameController @Inject()(addToken: CSRFAddToken,
                                cc: ControllerComponents, api: ApiService, config: Configuration)
@@ -34,6 +36,11 @@ class GameController @Inject()(addToken: CSRFAddToken,
 
   val endpoint: String = config.get[String]("app.endpoint")
 
+  /**
+   *  Renders the view of the game with the given Id
+   * @param id the id of the game to be rendered
+   * @return if the game belongs to the current session user, render the game's view. Otherwise returns Forbidden.
+   */
   def game(id: String): Action[AnyContent] = addToken(Action.async { implicit request =>
     withUser(api) { user =>
       val Token(name, value) = CSRF.getToken.getOrElse(throw new IllegalStateException("unable to get token"))
@@ -53,12 +60,14 @@ class GameController @Inject()(addToken: CSRFAddToken,
     }
   })
 
+  /** Renders a form to create a new game */
   def newGame(): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     withUser(api) { user =>
       Future.successful(Ok(views.html.newGame(GameForm.form)(user.username)))
     }
   }
 
+  /** Processes a form submission to create a new game */
   def newGameForm(): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     withUser(api) { user =>
       val onError: Form[GameFormData] => Future[Result] = { errorForm =>
@@ -79,6 +88,10 @@ class GameController @Inject()(addToken: CSRFAddToken,
     }
   }
 
+  /** Renders the list of games of the given user
+   * @param username
+   * @return If the given user is not logged in, it returns Forbidden.
+   */
   def userGames(username: String): Action[AnyContent] = addToken(Action.async { implicit request =>
     withUser(api) { user =>
       logger.debug(s"getting games of ${user.username}")

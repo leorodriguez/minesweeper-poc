@@ -3,6 +3,7 @@ package models
 import models.Board.{CellContent, Mine, Number}
 import play.api.libs.json.{Json, OFormat}
 
+/** Responses returned by the API lib. Meant to be serialized as JSON responses. */
 case class CellResponse(row: Int, col: Int, hasMine: Boolean, hidden: Boolean,
                         mark: Option[String], number: Option[Int])
 case class BoardResponse(cells: Seq[CellResponse], nRows: Int, nCols: Int, nMines: Int,
@@ -12,10 +13,12 @@ case class BoardResponse(cells: Seq[CellResponse], nRows: Int, nCols: Int, nMine
 object BoardResponse {
 
   object Formats {
+    /** Implicits formats to serialize messages **/
     implicit val cellResponse: OFormat[CellResponse] = Json.format[CellResponse]
     implicit val boardResponse: OFormat[BoardResponse] = Json.format[BoardResponse]
   }
 
+  /** Creates a response from a model board. */
   def fromBoard(board: Board): BoardResponse = {
     val cells = board.content map {
       case ((row, col), CellContent(Mine(), hidden, mark)) =>

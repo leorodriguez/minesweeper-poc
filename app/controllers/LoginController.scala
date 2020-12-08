@@ -12,6 +12,7 @@ import scala.util.control.NonFatal
 
 case class LoginFormData(username: String, password: String)
 
+/** A form to request the user to login */
 object LoginForm {
   val form: Form[LoginFormData] = Form(
     mapping(
@@ -21,17 +22,22 @@ object LoginForm {
   )
 }
 
+/** Handles user login request */
 @Singleton
 class LoginController @Inject()(cc: ControllerComponents, api: ApiService)
                                (implicit ec: ExecutionContext, assetsFinder: AssetsFinder)
   extends AbstractController(cc) with play.api.i18n.I18nSupport with Logging with ControllerUtils {
 
+  /** Renders the login form */
   def login() = Action.async { implicit request: Request[AnyContent] =>
     withOptUser(api) { userOpt =>
       Future.successful(Ok(views.html.login(LoginForm.form)(userOpt.map(_.username))))
     }
   }
 
+  /** Process a form submission to login the user.
+   * It redirects to game view if the login process was successful
+   * Otherwise it redirects to the login page again showing the form errors. */
   def loginAttempt(): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     LoginForm.form.bindFromRequest.fold(
       errorForm => {
