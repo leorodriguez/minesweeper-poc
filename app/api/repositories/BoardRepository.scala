@@ -2,6 +2,7 @@ package api.repositories
 
 import javax.inject.{Inject, Singleton}
 import models.Board._
+import play.api.Logging
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 import slick.jdbc.MySQLProfile.api._
@@ -9,6 +10,7 @@ import slick.lifted.Tag
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
+import scala.util.control.NonFatal
 
 
 case class BoardRep(gameId: String, row: Int, col: Int, hidden: Boolean, value: CellValue, mark: Option[CellMark])
@@ -22,7 +24,7 @@ class BoardTableDef(tag: Tag) extends Table[BoardRep](tag, "ms_boards") {
   def value = column[CellValue]("value")
   def mark = column[Option[CellMark]]("mark")
   def hidden = column[Boolean]("hidden")
-  // def boardIndex = index("ms_boards_idx", (gameId, row, col), unique = true)
+  // TODO add index (gameId, row, col), unique = true
 
   override def *
   = (gameId, row, col, hidden, value, mark) <> (BoardRep.tupled, BoardRep.unapply)
@@ -54,7 +56,8 @@ object BoardTableDef {
 
 @Singleton
 class BoardRepository @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
-                               (implicit ex: ExecutionContext) extends HasDatabaseConfigProvider[JdbcProfile] {
+                               (implicit ex: ExecutionContext)
+  extends HasDatabaseConfigProvider[JdbcProfile] with Logging {
 
   val board = TableQuery[BoardTableDef]
 
@@ -62,15 +65,27 @@ class BoardRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPr
   import dbConfig.profile.api._
 
   def init(): Future[Unit] = {
-    db.run(board.schema.createIfNotExists)
+    db.run(board.schema.createIfNotExists) recoverWith {
+      case NonFatal(ex) =>
+        logger.error("Unexpected error creating schema", ex)
+        Future.failed(ex)
+    }
   }
 
   def getBoard(gameId: String): Future[Seq[BoardRep]] = {
-    db.run(board.filter(_.gameId === gameId).result)
+    db.run(board.filter(_.gameId === gameId).result) recoverWith {
+      case NonFatal(ex) =>
+        logger.error("Unexpected error getting board", ex)
+        Future.failed(ex)
+    }
   }
 
   def insertBoard(boardRep: BoardRep): Future[Boolean] = {
-    db.run((board += boardRep).asTry).map(_.isSuccess)
+    db.run((board += boardRep).asTry).map(_.isSuccess) recoverWith {
+      case NonFatal(ex) =>
+        logger.error("Unexpected error inserting board", ex)
+        Future.failed(ex)
+    }
   }
 
   def updateBoard(boardRep: BoardRep): Future[Boolean] = {
@@ -81,7 +96,11 @@ class BoardRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPr
       .map(rep => (rep.value, rep.mark, rep.hidden))
       .update((boardRep.value, boardRep.mark, boardRep.hidden))
       .map(_ > 0)
-    )
+    )  recoverWith {
+      case NonFatal(ex) =>
+        logger.error("Unexpected updating board", ex)
+        Future.failed(ex)
+    }
   }
 
 }

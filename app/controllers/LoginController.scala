@@ -35,7 +35,7 @@ class LoginController @Inject()(cc: ControllerComponents, api: ApiService)
   def loginAttempt(): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     LoginForm.form.bindFromRequest.fold(
       errorForm => {
-        logger.error(s"Login form has errors ${errorForm.errors.mkString(",")}")
+        logger.warn(s"Login form has errors ${errorForm.errors.mkString(",")}")
         Future.successful(BadRequest(views.html.login(errorForm)(None)))
       },
       data => {
@@ -44,7 +44,6 @@ class LoginController @Inject()(cc: ControllerComponents, api: ApiService)
           valid = userOpt.exists(_.password == data.password)
           tokenOpt <- if (valid) api.registerUserSession(data.username).map(Some(_)) else Future.successful(None)
         } yield {
-          logger.warn(s"Credentials are ${if (valid) "VALID" else "NOT VALID"}")
           if (valid) {
             Redirect(routes.GameController.userGames(data.username))
               .withSession(request.session + (api.sessionTokenKey -> tokenOpt.getOrElse("")))
@@ -55,7 +54,7 @@ class LoginController @Inject()(cc: ControllerComponents, api: ApiService)
           }
         } ) recoverWith {
           case NonFatal(ex) =>
-            logger.error("Error during login attempt", ex)
+            logger.error("Unexpected error during login attempt", ex)
             Future.failed(ex)
         }
       }

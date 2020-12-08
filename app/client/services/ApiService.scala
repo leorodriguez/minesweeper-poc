@@ -7,15 +7,16 @@ import javax.inject.Inject
 import models.GameResponse.Formats._
 import models.UserResponse.Formats._
 import models.{GameResponse, GameResponseList, UserResponse}
-import play.api.Configuration
+import play.api.{Configuration, Logging}
 import play.api.libs.json.{JsError, Json}
 import play.api.libs.ws._
 import play.api.mvc.{RequestHeader, Session}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository, config: Configuration)
-                          (implicit ec: ExecutionContext) {
+                          (implicit ec: ExecutionContext) extends Logging {
 
   val sessionTokenKey = "sessionToken"
   val endpoint: String = config.get[String]("app.endpoint")
@@ -27,7 +28,11 @@ class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository, config:
         case code => JsError(s"unexpected status code $code")
       }
     }
-    response.map(_.getOrElse(None))
+    response.map(_.getOrElse(None)) recoverWith {
+      case NonFatal(ex) =>
+        logger.error("Unexpected error getting user", ex)
+        Future.failed(ex)
+    }
   }
 
   def addUser(userName: String, password: String): Future[Option[UserResponse]] = {
@@ -41,24 +46,36 @@ class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository, config:
         case code => JsError(s"unexpected status code $code")
       }
     }
-    response.map(_.getOrElse(None))
+    response.map(_.getOrElse(None)) recoverWith {
+      case NonFatal(ex) =>
+        logger.error("Unexpected error adding user", ex)
+        Future.failed(ex)
+    }
   }
 
   def getUserFromRequest(req: RequestHeader): Future[Option[UserResponse]] = {
     val sessionTokenOpt = req.session.get(sessionTokenKey)
-    for {
+    (for {
       sessionOpt <- sessionTokenOpt.map(sessionRepo.getSession).getOrElse(Future.successful(None))
       userOpt <- sessionOpt match {
         case Some(session) if session.expiration.isAfter(Instant.now()) => getUser(session.username)
         case _ => Future.successful(None)
       }
-    } yield userOpt
+    } yield userOpt) recoverWith {
+      case NonFatal(ex) =>
+        logger.error("Unexpected error getting user from request", ex)
+        Future.failed(ex)
+    }
   }
 
   def registerUserSession(username: String): Future[String] = {
-    for {
+    (for {
       token <- sessionRepo.addSession(username)
-    } yield token
+    } yield token) recoverWith {
+      case NonFatal(ex) =>
+        logger.error("Unexpected error registering user in session", ex)
+        Future.failed(ex)
+    }
   }
 
   def getGame(gameId: String): Future[Option[GameResponse]] = {
@@ -68,14 +85,22 @@ class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository, config:
         case code => JsError(s"unexpected status code $code")
       }
     }
-    response.map(_.getOrElse(None))
+    response.map(_.getOrElse(None)) recoverWith {
+      case NonFatal(ex) =>
+        logger.error("Unexpected error getting game", ex)
+        Future.failed(ex)
+    }
   }
 
   def getUserGames(username: String): Future[Option[GameResponseList]] = {
     val response = ws.url(s"http://$endpoint/api/games?username=$username").get().map { response =>
       (response.json).validate[GameResponseList]
     }
-    response.map(_.asOpt)
+    response.map(_.asOpt) recoverWith {
+      case NonFatal(ex) =>
+        logger.error("Unexpected error getting user names", ex)
+        Future.failed(ex)
+    }
   }
 
   def addGame(username: String, nRows: Int, nCols: Int, nMines: Int): Future[Option[GameResponse]] = {
@@ -91,7 +116,11 @@ class ApiService @Inject()(ws: WSClient, sessionRepo: SessionRepository, config:
         case code => JsError(s"unexpected status code $code")
       }
     }
-    response.map(_.getOrElse(None))
+    response.map(_.getOrElse(None)) recoverWith {
+      case NonFatal(ex) =>
+        logger.error("Unexpected error adding user", ex)
+        Future.failed(ex)
+    }
   }
 
 }

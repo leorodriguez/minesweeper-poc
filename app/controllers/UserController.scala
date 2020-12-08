@@ -52,7 +52,7 @@ class UserController @Inject()(cc: ControllerComponents, api: ApiService)
           }
         } ) recoverWith {
           case NonFatal(ex) =>
-            logger.error("Error during register attempt", ex)
+            logger.error("Unexpected errror during register attempt", ex)
             Future.failed(ex)
         }
       }

@@ -11,6 +11,7 @@ import play.filters.csrf._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
+import scala.util.control.NonFatal
 
 case class GameFormData(nRows: Int, nCols: Int, nMines: Int)
 
@@ -36,7 +37,7 @@ class GameController @Inject()(addToken: CSRFAddToken,
   def game(id: String): Action[AnyContent] = addToken(Action.async { implicit request =>
     withUser(api) { user =>
       val Token(name, value) = CSRF.getToken.getOrElse(throw new IllegalStateException("unable to get token"))
-      for {
+      (for {
         gameOpt <- api.getGame(id)
       } yield {
         gameOpt match {
@@ -44,6 +45,10 @@ class GameController @Inject()(addToken: CSRFAddToken,
           case Some(game) if game.owner != user.username => Forbidden(views.html.defaultpages.unauthorized())
           case Some(game) => Ok(views.html.game(game, name, value, endpoint))
         }
+      }) recoverWith {
+        case NonFatal(ex) =>
+          logger.error(s"Unexpected error getting game $id", ex)
+          Future.failed(ex)
       }
     }
   })
@@ -60,10 +65,14 @@ class GameController @Inject()(addToken: CSRFAddToken,
         Future.successful(BadRequest(views.html.newGame(errorForm)(user.username)))
       }
       val onSuccess: GameFormData => Future[Result] = { data =>
-        for {
+        (for {
           gameOpt <- api.addGame(user.username, nRows = data.nRows, nCols = data.nCols, nMines = data.nMines)
         } yield {
           gameOpt.map(game => Redirect(routes.GameController.game(game.id))) getOrElse NotFound
+        }) recoverWith {
+          case NonFatal(ex) =>
+            logger.error("Unexpected error adding new game", ex)
+            Future.failed(ex)
         }
       }
       GameForm.form.bindFromRequest.fold(onError, onSuccess)
@@ -72,9 +81,8 @@ class GameController @Inject()(addToken: CSRFAddToken,
 
   def userGames(username: String): Action[AnyContent] = addToken(Action.async { implicit request =>
     withUser(api) { user =>
-      logger.warn(s"getting games of ${user.username}")
-      //val Token(name, value) = CSRF.getToken.getOrElse(throw new IllegalStateException("unable to get token"))
-      for {
+      logger.debug(s"getting games of ${user.username}")
+      (for {
         repsOpt <- api.getUserGames(username)
       } yield {
         val items = repsOpt.map(_.items).getOrElse(Seq.empty)
@@ -83,6 +91,10 @@ class GameController @Inject()(addToken: CSRFAddToken,
         } else {
           Forbidden(views.html.defaultpages.unauthorized())
         }
+      }) recoverWith {
+        case NonFatal(ex) =>
+          logger.error("Unexpected error getting user games", ex)
+          Future.failed(ex)
       }
     }
   })
