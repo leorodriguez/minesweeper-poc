@@ -1,4 +1,5 @@
-# A MineSweeper game in Scala+Play 
+# (Work in Progress, Quick POC).
+A MineSweeper game in Scala+Play 
 
 1. Developed in Scala using Play framework.
 2. Client web application written in Scala and Javascript.
